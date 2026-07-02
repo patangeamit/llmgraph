@@ -42,7 +42,7 @@ export default function App() {
         },
         data: {
           title: query,
-          subtitle: "",
+          subtitle: "Lorem Espum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
       },
     ]);

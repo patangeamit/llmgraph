@@ -7,27 +7,44 @@ import {
   addEdge,
   useNodesState,
   useEdgesState,
-  BackgroundVariant
+  BackgroundVariant,
+  MarkerType
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
 
 import { initialNodes, nodeTypes } from "./nodes";
 import { initialEdges, edgeTypes } from "./edges";
+import FloatingConnectionLine from "./edges/FloatingConnectionLine";
 
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [query, setQuery] = useState("");
   const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [contextNodeIds, setContextNodeIds] = useState(new Set());
+  // const onConnect = useCallback(
+  //   (connection) => setEdges((edges) => addEdge(connection, edges)),
+  //   [setEdges]
+  // );
+
   const onConnect = useCallback(
-    (connection) => setEdges((edges) => addEdge(connection, edges)),
-    [setEdges]
+    (params) =>
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...params,
+            type: 'floating',
+            markerEnd: { type: MarkerType.Arrow },
+          },
+          eds,
+        ),
+      ),
+    [setEdges],
   );
 
   const onSubmit = () => {
     // Handle submit logic here
-    console.log("Submitted query:", query);
     const parent = nodes.find((n) => n.id === selectedNodeId);
     if (!parent || !query.trim()) return;
     const id = crypto.randomUUID();
@@ -53,11 +70,42 @@ export default function App() {
         id: `${parent.id}-${id}`,
         source: parent.id,
         target: id,
+        type: 'floating',
+        markerEnd: { type: MarkerType.Arrow },
       },
     ]);
 
   };
 
+  const onSelectionChange = (elements) => {
+    console.log("onSelectionChange", elements);
+    setSelectedNodeId(elements?.nodes[0]?.id || null);
+  }
+
+  const onNodeClick = (_, node) => {
+    const selectedIds = new Set([node.id]);
+
+    let current = node.id;
+
+    while (true) {
+      const parentEdge = edges.find((e) => e.target === current);
+      if (!parentEdge) break;
+
+      selectedIds.add(parentEdge.source);
+      current = parentEdge.source;
+    }
+
+    setNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        data: {
+          ...n.data,
+          isContext: selectedIds.has(n.id),
+        },
+      }))
+    );
+  };
+  
   return (
     <div className="app">
       <div className="flow-container">
@@ -65,17 +113,15 @@ export default function App() {
           nodes={nodes}
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
-          onSelectionChange={(elements) => {
-              setSelectedNodeId(elements?.nodes[0]?.id || null);
-              console.log("onSelectChange", elements)
-            }
-          }
+          onSelectionChange={onSelectionChange}
+          onNodeClick={onNodeClick}
           edges={edges}
           edgeTypes={edgeTypes}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           fitView
           proOptions={{ hideAttribution: true }}
+          connectionLineComponent={FloatingConnectionLine}
           >
           <Background 
             id="1"

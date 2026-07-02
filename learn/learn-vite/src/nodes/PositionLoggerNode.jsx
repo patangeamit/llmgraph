@@ -12,7 +12,7 @@ export function PositionLoggerNode({ data , selected}) {
         borderRadius: 8,
         background: "#222",
         color: "white",
-        border: selected ? "2px solid #3b82f6" : "1px solid #555",
+        border: selected ? "4px solid #3b82f6" : data.isContext? "2px dashed #3b82f6" : "1px solid #555",
       }}
     >
       {/* <Handle type="target" position="top" /> */}
@@ -44,8 +44,8 @@ export function PositionLoggerNode({ data , selected}) {
         </p>
       )}
 
-      <Handle type="target" position="top" />
-      <Handle type="source" position="bottom" />
+      <Handle type="target" position="top" style={{opacity: 0}} />
+      <Handle type="source" position="bottom" style={{opacity: 0}} />
 
     </div>
   );

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import {
   Background,
   Controls,
@@ -22,7 +22,7 @@ export default function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [query, setQuery] = useState("");
   const [selectedNodeId, setSelectedNodeId] = useState(null);
-  const [contextNodeIds, setContextNodeIds] = useState(new Set());
+  // const [contextNodeIds, setContextNodeIds] = useState(new Set());
   // const onConnect = useCallback(
   //   (connection) => setEdges((edges) => addEdge(connection, edges)),
   //   [setEdges]
@@ -49,7 +49,11 @@ export default function App() {
     if (!parent || !query.trim()) return;
     const id = crypto.randomUUID();
     setNodes((nds) => [
-      ...nds,
+      ...nds.map((n) => ({
+        ...n,
+        selected: false
+      })),
+      
       {
         id,
         type: "position-logger",
@@ -61,6 +65,7 @@ export default function App() {
           title: query,
           subtitle: "Lorem Espum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        selected: true
       },
     ]);
 
@@ -77,44 +82,49 @@ export default function App() {
 
   };
 
-  const onSelectionChange = (elements) => {
-    console.log("onSelectionChange", elements);
-    setSelectedNodeId(elements?.nodes[0]?.id || null);
+  const onSelectionChange = ({ nodes }) => {
+    console.log("selection", nodes);
+    if (nodes.length === 0) {
+      setSelectedNodeId(null);
+      return;
+    }
+    console.log("setting", nodes[0].id);
+    setSelectedNodeId(nodes[0].id);
   }
+  
+  const contextNodeIds = useMemo(() => {
+    if (!selectedNodeId) return new Set();
 
-  const onNodeClick = (_, node) => {
-    const selectedIds = new Set([node.id]);
-
-    let current = node.id;
+    const ids = new Set([selectedNodeId]);
+    let current = selectedNodeId;
 
     while (true) {
-      const parentEdge = edges.find((e) => e.target === current);
+      const parentEdge = edges.find(e => e.target === current);
       if (!parentEdge) break;
 
-      selectedIds.add(parentEdge.source);
+      ids.add(parentEdge.source);
       current = parentEdge.source;
     }
 
-    setNodes((nds) =>
-      nds.map((n) => ({
-        ...n,
-        data: {
-          ...n.data,
-          isContext: selectedIds.has(n.id),
-        },
-      }))
-    );
-  };
-  
+    return ids;
+  }, [selectedNodeId, edges]);
+
+  const displayNodes = nodes.map((node) => ({
+    ...node,
+    data: {
+      ...node.data,
+      isContext: contextNodeIds.has(node.id),
+    }}));
+
+
   return (
     <div className="app">
       <div className="flow-container">
         <ReactFlow
-          nodes={nodes}
+          nodes={displayNodes}
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
           onSelectionChange={onSelectionChange}
-          onNodeClick={onNodeClick}
           edges={edges}
           edgeTypes={edgeTypes}
           onEdgesChange={onEdgesChange}

@@ -116,39 +116,67 @@ export default function App() {
       isContext: contextNodeIds.has(node.id),
     }}));
 
+  const contextNodes = displayNodes.filter((node) =>
+    contextNodeIds.has(node.id)
+  );
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
   return (
     <div className="app">
-      <div className="flow-container">
-        <ReactFlow
-          nodes={displayNodes}
-          nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
-          onSelectionChange={onSelectionChange}
-          edges={edges}
-          edgeTypes={edgeTypes}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          fitView
-          proOptions={{ hideAttribution: true }}
-          connectionLineComponent={FloatingConnectionLine}
+      <div className="main-content">
+        <div className="flow-container">
+          <ReactFlow
+            nodes={displayNodes}
+            nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onSelectionChange={onSelectionChange}
+            edges={edges}
+            edgeTypes={edgeTypes}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            fitView
+            proOptions={{ hideAttribution: true }}
+            connectionLineComponent={FloatingConnectionLine}
           >
-          <Background 
-            id="1"
-            gap={10}
-            color="#222"
-            bgColor="#111"
-            variant={BackgroundVariant.Dots}/>
-          {/* <MiniMap /> */}
-          {/* <Controls /> */}
-        </ReactFlow>
-      </div>
-      <div>
-        <textarea value={query} onChange={(e) => setQuery(e.target.value)}></textarea>
-        <button onClick={onSubmit}>Submit</button>
-      </div>
-      <footer>Status Bar</footer>
-    </div>
+            <Background
+              id="1"
+              gap={10}
+              color="#222"
+              bgColor="#111"
+              variant={BackgroundVariant.Dots}
+            />
+          </ReactFlow>
+        </div>
 
+        <aside className="side-panel">
+          <div className="node-info">
+            {selectedNode ? (
+              <>
+              {contextNodes.map((node) => (
+                <div key={node.id} className="context-node">
+                  <h2>{node.data.title}</h2>
+                  <p>{node.data.subtitle}</p>
+                </div>
+              ))}
+             </>
+            ) : (
+              <p>Select a node</p>
+            )}
+          </div>
+
+          <div className="input-area">
+            <textarea
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Ask something..."
+            />
+            <button onClick={onSubmit}>Send</button>
+          </div>
+        </aside>
+      </div>
+
+      {/* <footer>Status Bar</footer> */}
+    </div>
   );
 }
+

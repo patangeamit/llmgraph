@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import {
   Background,
   Controls,
@@ -13,12 +13,12 @@ import {
 
 import "@xyflow/react/dist/style.css";
 
-import { initialNodes, nodeTypes } from "./nodes";
+import { initialNodes, nodeTypes, style } from "./nodes";
 import { initialEdges, edgeTypes } from "./edges";
 import FloatingConnectionLine from "./edges/FloatingConnectionLine";
 
 export default function App() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [query, setQuery] = useState("");
   const [selectedNodeId, setSelectedNodeId] = useState(null);
@@ -27,6 +27,40 @@ export default function App() {
   //   (connection) => setEdges((edges) => addEdge(connection, edges)),
   //   [setEdges]
   // );
+
+  async function fetchInitialNodes() {
+    const response = await fetch("http://localhost:8000/queries");
+    const data = await response.json();
+
+    return data.map((item, index) => ({
+      id: String(item.id),
+      position: {
+        x: 0,
+        y: index * 180,
+      },      
+      title: item.query_text,
+      subtitle: item.status,    
+      style: style,
+
+      id: String(item.id),
+      type: "position-logger",
+      position: {
+        x: 0,
+        y: index * 180,
+      },
+      data: { title: item.query_text, subtitle: item.status },
+      style: style
+
+    }));
+  }
+
+  useEffect(() => {
+    async function loadNodes() {
+      const nodes = await fetchInitialNodes();
+      setNodes(nodes);
+    }
+    loadNodes();
+  }, [setNodes]);
 
   const onConnect = useCallback(
     (params) =>

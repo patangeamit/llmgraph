@@ -1,5 +1,5 @@
 import { PositionLoggerNode } from "./PositionLoggerNode";
-const style = {
+export const style = {
       background: '#222222',
       color: '#fff',
       border: '1px solid #475569',

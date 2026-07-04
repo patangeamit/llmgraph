@@ -12,3 +12,19 @@ class UserResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class QueryCreate(BaseModel):
+    query_text: str
+    user_id: int
+    parent_query_id: int | None = None  # Optional field for top-level queries
+
+class QueryResponse(BaseModel):
+    id: int
+    query_text: str
+    user_id: int
+    parent_query_id: int | None = None
+    status: str
+
+    model_config = {
+        "from_attributes": True
+    }

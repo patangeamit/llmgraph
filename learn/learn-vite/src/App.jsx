@@ -32,32 +32,32 @@ export default function App() {
     const response = await fetch("http://localhost:8000/queries");
     const data = await response.json();
 
-    return data.map((item, index) => ({
-      id: String(item.id),
-      position: {
-        x: 0,
-        y: index * 180,
-      },      
-      title: item.query_text,
-      subtitle: item.status,    
-      style: style,
-
+    const nodes =  data.map((item, index) => ({
       id: String(item.id),
       type: "position-logger",
       position: {
-        x: 0,
-        y: index * 180,
+        x: index * 100 * (index % 2 === 0 ? -1 : 1),
+        y: item.parent_query_id * 180,
       },
       data: { title: item.query_text, subtitle: item.status },
       style: style
 
     }));
+    const edges = data.map((item)=>({
+        id: `${item.parent_query_id}-${item.id}`,
+        source: String(item.parent_query_id),
+        target: String(item.id),
+        type: 'floating',
+        markerEnd: { type: MarkerType.Arrow },
+    }));
+    return {nodes, edges};
   }
 
   useEffect(() => {
     async function loadNodes() {
-      const nodes = await fetchInitialNodes();
+      const {nodes, edges} = await fetchInitialNodes();
       setNodes(nodes);
+      setEdges(edges);
     }
     loadNodes();
   }, [setNodes]);

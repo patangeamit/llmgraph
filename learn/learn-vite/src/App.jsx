@@ -36,20 +36,22 @@ export default function App() {
       id: String(item.id),
       type: "position-logger",
       position: {
-        x: index * 100 * (index % 2 === 0 ? -1 : 1),
-        y: item.parent_query_id * 180,
+        x: index * 80 * (index % 2 === 0 ? -1 : 1),
+        y: index * 80,
       },
-      data: { title: item.query_text, subtitle: item.status },
+      data: { title: item.query_text, subtitle: item.llm_response },
       style: style
 
     }));
-    const edges = data.map((item)=>({
-        id: `${item.parent_query_id}-${item.id}`,
-        source: String(item.parent_query_id),
-        target: String(item.id),
-        type: 'floating',
-        markerEnd: { type: MarkerType.Arrow },
-    }));
+    const edges = data
+      .filter((item) => item.parent_query_id !== 0)
+      .map((item)=>({
+          id: `${item.parent_query_id}-${item.id}`,
+          source: String(item.parent_query_id),
+          target: String(item.id),
+          type: 'floating',
+          markerEnd: { type: MarkerType.Arrow },
+      }));
     return {nodes, edges};
   }
 
@@ -88,8 +90,8 @@ export default function App() {
       },
       body: JSON.stringify({
         "query_text": query,
-        "user_id": 0,
-        "parent_query_id": parent ? parseInt(parent.id) : "root"
+        "user_id": "0",
+        "parent_query_id": parent ? String(parent.id) : ""
       }),
     })
     .then((response) => {
@@ -99,7 +101,6 @@ export default function App() {
       return response.json();
     })
     .then((data) => {
-      const id = crypto.randomUUID();
       setNodes((nds) => [
         ...nds.map((n) => ({
           ...n,
@@ -110,8 +111,8 @@ export default function App() {
           id: String(data.id),
           type: "position-logger",
           position: {
-            x: parent.position.x,
-            y: parent.position.y + 150,
+            x: parent ? parent.position.x : 0,
+            y: parent ? parent.position.y + 150 : 0,
           },
           data: {
             title: String(data.query_text),

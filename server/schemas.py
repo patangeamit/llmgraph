@@ -16,13 +16,13 @@ class UserResponse(BaseModel):
 class QueryCreate(BaseModel):
     query_text: str
     user_id: int
-    parent_query_id: int | None = None  # Optional field for top-level queries
+    parent_query_id: str 
 
 class QueryResponse(BaseModel):
-    id: int
+    id: str
     query_text: str
     user_id: int
-    parent_query_id: int | None = None
+    parent_query_id: str | None = None
     status: str
     llm_response: str | None = None
     model_config = {

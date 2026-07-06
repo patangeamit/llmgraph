@@ -78,51 +78,70 @@ export default function App() {
   );
 
   const onSubmit = () => {
-    // Handle submit logic here
     const parent = nodes.find((n) => n.id === selectedNodeId);
-    if (!parent || !query.trim()) return;
-    const id = crypto.randomUUID();
-    setNodes((nds) => [
-      ...nds.map((n) => ({
-        ...n,
-        selected: false
-      })),
-      
-      {
-        id,
-        type: "position-logger",
-        position: {
-          x: parent.position.x,
-          y: parent.position.y + 150,
-        },
-        data: {
-          title: query,
-          subtitle: "Lorem Espum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        selected: true
-      },
-    ]);
+    if (!query.trim()) return; 
 
-    setEdges((eds) => [
-      ...eds,
-      {
-        id: `${parent.id}-${id}`,
-        source: parent.id,
-        target: id,
-        type: 'floating',
-        markerEnd: { type: MarkerType.Arrow },
+    fetch("http://localhost:8000/query", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ]);
+      body: JSON.stringify({
+        "query_text": query,
+        "user_id": 0,
+        "parent_query_id": parent ? parseInt(parent.id) : "root"
+      }),
+    })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const id = crypto.randomUUID();
+      setNodes((nds) => [
+        ...nds.map((n) => ({
+          ...n,
+          selected: false
+        })),
+        
+        {
+          id: String(data.id),
+          type: "position-logger",
+          position: {
+            x: parent.position.x,
+            y: parent.position.y + 150,
+          },
+          data: {
+            title: String(data.query_text),
+            subtitle: String(data.llm_response),
+          },
+          selected: true
+        },
+      ]);
 
+      setEdges((eds) => [
+        ...eds,
+        {
+          id: `${data.parent_query_id}-${data.id}`,
+          source: String(data.parent_query_id),
+          target: String(data.id),
+          type: 'floating',
+          markerEnd: { type: MarkerType.Arrow },
+        },
+      ]);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
   };
 
   const onSelectionChange = ({ nodes }) => {
-    console.log("selection", nodes);
     if (nodes.length === 0) {
       setSelectedNodeId(null);
       return;
     }
-    console.log("setting", nodes[0].id);
     setSelectedNodeId(nodes[0].id);
   }
   

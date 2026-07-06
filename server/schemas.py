@@ -24,7 +24,7 @@ class QueryResponse(BaseModel):
     user_id: int
     parent_query_id: int | None = None
     status: str
-
+    llm_response: str | None = None
     model_config = {
         "from_attributes": True
     }
